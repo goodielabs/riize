@@ -69,8 +69,12 @@ export default async (req, context) => {
         if (v == null) return '';
         if (Array.isArray(v)) return v.map(x => x.text || x.name || String(x)).join('');
         if (key === 'date' && typeof v === 'number') {
+          // 飞书日期时间戳是 UTC 毫秒，用本地时间转换避免时区偏移
           const d = new Date(v);
-          return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+          const localY = d.getFullYear();
+          const localM = String(d.getMonth() + 1).padStart(2, '0');
+          const localD = String(d.getDate()).padStart(2, '0');
+          return `${localY}-${localM}-${localD}`;
         }
         if (typeof v === 'object' && v.text) return v.text;
         return String(v);
