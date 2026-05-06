@@ -195,22 +195,76 @@ footer strong{color:var(--orange);}
 @media(max-width:768px){
   .hero-stats{display:none;}
   .hero{padding:24px 16px 20px;}
-  .cal-cell{min-height:62px;}
-  .cell-chip{font-size:8px;}
+  .cal-cell{min-height:56px;padding:4px 3px;}
+  .cell-chip{font-size:8px;padding:1px 4px;}
   .cell-num{font-size:11px;width:20px;height:20px;}
-  .filters-inner{gap:5px;}
+  .filters-inner{gap:5px;flex-wrap:wrap;}
   .filter-select{font-size:12px;padding:5px 26px 5px 9px;}
   header{padding:0 14px;}
   .main{padding:14px 14px 100px;}
   .countdown-bar{font-size:12px;padding:8px 14px;}
+  .cal-weekdays{} /* ensure grid still 7 cols */
 }
 @media(max-width:480px){
-  .cal-cell{min-height:46px;padding:3px 2px;}
-  .cal-wd{font-size:9px;padding:7px 1px;}
-  .member-strip-wrap{top:108px;}
+  /* ── 日历格子 ── */
+  .cal-cell{min-height:44px;padding:2px 1px;}
+  .cal-wd{font-size:9px;padding:6px 0;letter-spacing:0;}
+  .cal-grid-wrap{border-radius:12px;}
+  .cell-num{font-size:10px;width:18px;height:18px;margin-bottom:2px;}
+  .cell-chip{font-size:0;height:4px;padding:0;border-radius:2px;margin-bottom:1px;}
+  /* 把文字标签改成小色条，节省空间 */
+  .cell-more{font-size:8px;}
+
+  /* ── 粘性 header 高度修正 ── */
+  .member-strip-wrap{top:104px;}
+
+  /* ── 筛选栏 ── */
+  .filters-bar{padding:6px 12px;}
+  .filters-inner{gap:4px;}
+  .filter-select{font-size:11px;padding:4px 22px 4px 8px;}
+  .today-btn,.clear-btn{font-size:11px;padding:4px 10px;}
+  .filter-label{display:none;}
+
+  /* ── 成员快捷键 ── */
+  .member-strip-wrap{padding:6px 12px;}
+  .mbtn{font-size:10px;padding:4px 8px;}
+
+  /* ── Header ── */
+  .logo-cn{font-size:13px;}
+  .logo-en{font-size:9px;}
+  .logo-img{width:36px;height:36px;}
+  .view-btn{font-size:11px;padding:5px 10px;}
+  .lang-select{font-size:11px;padding:4px 22px 4px 8px;}
+
+  /* ── Upcoming strip ── */
+  .upcoming-card{min-width:180px;}
+  .upcoming-name{font-size:12px;}
+
+  /* ── Day panel ── */
+  .day-panel-date{font-size:14px;}
+  .ev-name{font-size:13px;}
+}
+
+/* 超小屏（iPhone SE 等，宽度<375px）*/
+@media(max-width:375px){
+  .cal-cell{min-height:38px;padding:2px 0;}
+  .cell-num{font-size:9px;width:16px;height:16px;}
+  .cal-wd{font-size:8px;}
+  .mbtn{font-size:9px;padding:3px 6px;}
 }
 .fade-in{animation:fadeIn .3s ease both;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ── 手机端日历：确保7列等宽且数字不截断 ── */
+  @media(max-width:768px){
+    .cal-grid, .cal-weekdays{
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+    .cell-num{
+      flex-shrink: 0;
+      overflow: visible;
+    }
+  }
 </style>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="8719967f-1423-40b2-b4d3-d0d64bea63c4"></script>
 </head>
