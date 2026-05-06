@@ -69,12 +69,14 @@ export default async (req, context) => {
         if (v == null) return '';
         if (Array.isArray(v)) return v.map(x => x.text || x.name || String(x)).join('');
         if (key === 'date' && typeof v === 'number') {
-          // 飞书日期时间戳是 UTC 毫秒，用本地时间转换避免时区偏移
-          const d = new Date(v);
-          const localY = d.getFullYear();
-          const localM = String(d.getMonth() + 1).padStart(2, '0');
-          const localD = String(d.getDate()).padStart(2, '0');
-          return `${localY}-${localM}-${localD}`;
+          // 飞书日期时间戳是 UTC 毫秒
+          // Netlify 服务器在 UTC 时区，必须手动加 8 小时偏移才能得到北京时间日期
+          const UTC8_OFFSET = 8 * 60 * 60 * 1000;
+          const d = new Date(v + UTC8_OFFSET);
+          const y = d.getUTCFullYear();
+          const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+          const day = String(d.getUTCDate()).padStart(2, '0');
+          return `${y}-${m}-${day}`;
         }
         if (typeof v === 'object' && v.text) return v.text;
         return String(v);
