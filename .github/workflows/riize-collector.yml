@@ -51,7 +51,7 @@ jobs:
           LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          AUTO_PUBLISH: ${{ vars.AUTO_PUBLISH || 'on' }}
+          AUTO_PUBLISH: ${{ vars.AUTO_PUBLISH || 'off' }}   # off=全部进待审核
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}
 
       - name: Save seen-cache
