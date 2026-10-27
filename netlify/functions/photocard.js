@@ -42,7 +42,7 @@ async function listRecords(token, appToken) {
   const all = [];
   let pt = '';
   do {
-    const url = `https://open.feishu.cn/open-apis/bitable/v1/apps/${appToken}/tables/${TABLE_ID}/records?page_size=500${pt ? '&page_token=' + pt : ''}`;
+    const url = `https://open.feishu.cn/open-apis/bitable/v1/apps/${appToken}/tables/${TABLE_ID}/records?page_size=500&automatic_fields=true${pt ? '&page_token=' + pt : ''}`;
     const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     const d = await r.json();
     if (d.code !== 0) throw new Error('list: ' + d.msg);
@@ -71,8 +71,16 @@ function toListing(item) {
     have:    String(readField(f, 'have_text') || ''),
     want:    String(readField(f, 'want_text') || ''),
     region:  String(readField(f, 'region') || ''),
-    ts: Number(f[F.created_at]) || Date.now(),
+    ts: postTime(item),
   };
+}
+
+// 发帖时间：优先用 created_at 列；没有就用飞书自动记录的创建时间（需要请求时带 automatic_fields=true）
+function postTime(item) {
+  const v = (item.fields || {})[F.created_at];
+  const fromField = typeof v === 'number' ? v : Date.parse(Array.isArray(v) ? v.map(x => x.text || '').join('') : v || '');
+  if (fromField > 0) return fromField;
+  return Number(item.created_time) || 0;
 }
 
 /* ---------- handler ---------- */

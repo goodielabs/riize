@@ -1354,7 +1354,18 @@ function dcRenderReply(r,likes,mine){
     </div>
   </div>`;
 }
-function dcAgo(ts){const d=Date.now()-ts;if(d<60000) return "刚刚";if(d<3600000) return Math.floor(d/60000)+" 分钟前";if(d<86400000) return Math.floor(d/3600000)+" 小时前";return Math.floor(d/86400000)+" 天前";}
+function dcAgo(ts){
+  // 显示真实发布时间：今天 20:15 / 昨天 20:15 / 10月27日 20:15 / 2025年10月27日
+  ts=Number(ts); if(!ts) return "";
+  const t=new Date(ts), now=new Date(), p=n=>String(n).padStart(2,"0");
+  const hm=p(t.getHours())+":"+p(t.getMinutes());
+  const day=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+  const diff=Math.round((day(now)-day(t))/86400000);
+  if(diff===0) return "今天 "+hm;
+  if(diff===1) return "昨天 "+hm;
+  if(t.getFullYear()===now.getFullYear()) return (t.getMonth()+1)+"月"+t.getDate()+"日 "+hm;
+  return t.getFullYear()+"年"+(t.getMonth()+1)+"月"+t.getDate()+"日";
+}
 function dcHash(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
 function dcEsc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 
