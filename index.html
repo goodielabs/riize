@@ -300,6 +300,7 @@ footer strong{color:var(--orange);}
 .cb-hero-title{font-size:30px;font-weight:800;margin:0 0 6px;letter-spacing:-.02em;position:relative;}
 .cb-hero-sub{color:#FFD8A8;font-size:14px;margin-bottom:24px;font-weight:600;position:relative;}
 .cb-hero.released .cb-hero-sub{color:#FFEDD9;}
+.cb-cover{display:block;width:200px;max-width:60%;aspect-ratio:1/1;object-fit:cover;margin:0 auto 18px;border-radius:var(--r-md);box-shadow:0 12px 32px rgba(0,0,0,.25);position:relative;}
 .cb-countdown{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;position:relative;}
 .cb-cd-unit{background:rgba(255,255,255,.08);border:1px solid rgba(255,107,43,.3);border-radius:var(--r-md);padding:12px 18px;min-width:80px;}
 .cb-cd-v{font-size:30px;font-weight:800;color:var(--orange);line-height:1;}
@@ -1080,8 +1081,19 @@ function switchPage(id){
   if(id === "quiz" && !window.__qzInit){ qzStart(); window.__qzInit = true; }
 }
 
-/* 回归 D-day(请改成实际官宣时间,KST) */
-const COMEBACK_TS = new Date("2026-06-15T18:00:00+09:00").getTime();
+/* ══════ 回归设置：每次回归只改这里 ══════ */
+const COMEBACK = {
+  title:   "Insomnia",                                 // 作品名
+  kind:    "DIGITAL SINGLE",                           // 类型：DIGITAL SINGLE / MINI ALBUM / FULL ALBUM
+  release: "2026-10-26T00:00:00+09:00",                // 发行时间（韩国时间）
+  cover:   "insomnia.jpg",                             // 封面图：把图片上传到仓库根目录，文件名和这里一致
+  mv:      "https://www.youtube.com/results?search_query=RIIZE+Insomnia+MV",
+  spotify: "https://open.spotify.com/search/RIIZE%20Insomnia",
+  apple:   "https://music.apple.com/search?term=RIIZE%20Insomnia",
+};
+const COMEBACK_TS = new Date(COMEBACK.release).getTime();
+const cbDateLabel = (()=>{const d=new Date(COMEBACK_TS+9*3600e3);const p=n=>String(n).padStart(2,"0");return `${d.getUTCFullYear()}.${p(d.getUTCMonth()+1)}.${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} KST`;})();
+const cbCover = COMEBACK.cover ? `<img class="cb-cover" src="${COMEBACK.cover}" alt="RIIZE ${COMEBACK.title}" onerror="this.remove()">` : "";
 
 /* ---------- 回归 hero 自动切换"前 / 后" ---------- */
 let cbState = null;
@@ -1094,8 +1106,9 @@ function renderCbHero(){
     if(ns === "pre"){
       card.classList.remove("released");
       card.innerHTML = `
-        <span class="cb-hero-label">2026.06.15 18:00 KST</span>
-        <div class="cb-hero-title">RIIZE NEW ALBUM</div>
+        ${cbCover}
+        <span class="cb-hero-label">${cbDateLabel}</span>
+        <div class="cb-hero-title">RIIZE《${COMEBACK.title}》</div>
         <div class="cb-hero-sub">🧡 BRIIZE,准备好你的椅子了吗?</div>
         <div class="cb-countdown">
           <div class="cb-cd-unit"><div class="cb-cd-v" id="cd-d">--</div><div class="cb-cd-l">DAYS</div></div>
@@ -1106,15 +1119,15 @@ function renderCbHero(){
     } else {
       card.classList.add("released");
       card.innerHTML = `
-        <span class="cb-hero-label">🎉 NOW LIVE</span>
-        <div class="cb-hero-title">NEW ALBUM IS HERE 🧡</div>
+        ${cbCover}
+        <span class="cb-hero-label">🎉 NOW LIVE · ${COMEBACK.kind}</span>
+        <div class="cb-hero-title">《${COMEBACK.title}》🧡</div>
         <div class="cb-hero-sub">BRIIZE,新歌已经在听了吗?</div>
         <div class="cb-listen-row">
-          <a class="cb-listen-btn yt" href="https://www.youtube.com/@RIIZE_official" target="_blank" rel="noopener">▶ 看 MV</a>
-          <a class="cb-listen-btn sp" href="https://open.spotify.com/artist/2maRELqHTOpwiHRJrlQRtj" target="_blank" rel="noopener">♫ Spotify</a>
-          <a class="cb-listen-btn" href="https://music.apple.com/artist/riize/1707415649" target="_blank" rel="noopener">🍎 Apple Music</a>
-        </div>
-        <div class="cb-since" id="cd-since"></div>`;
+          <a class="cb-listen-btn yt" href="${COMEBACK.mv}" target="_blank" rel="noopener">▶ 看 MV</a>
+          <a class="cb-listen-btn sp" href="${COMEBACK.spotify}" target="_blank" rel="noopener">♫ Spotify</a>
+          <a class="cb-listen-btn" href="${COMEBACK.apple}" target="_blank" rel="noopener">🍎 Apple Music</a>
+        </div>`;
     }
     cbState = ns;
   }
@@ -1126,12 +1139,6 @@ function renderCbHero(){
     const $h=document.getElementById("cd-h"); if($h) $h.textContent=pad(h);
     const $m=document.getElementById("cd-m"); if($m) $m.textContent=pad(m);
     const $s=document.getElementById("cd-s"); if($s) $s.textContent=pad(s);
-  } else {
-    const since = -diff;
-    let txt = since < 3600000 ? "刚刚发布 🎉"
-            : since < 86400000 ? `已发布 ${Math.floor(since/3600000)} 小时前`
-            : `已发布 ${Math.floor(since/86400000)} 天前 · BRIIZE 我们继续打榜 🧡`;
-    const $s=document.getElementById("cd-since"); if($s) $s.textContent=txt;
   }
 }
 setInterval(renderCbHero, 1000); renderCbHero();

@@ -39,9 +39,9 @@ export const RULES = {
   MAX_ITEM_AGE_DAYS: 7,        // 只处理最近 7 天的文章
   EVENT_PAST_DAYS: 3,          // 行程日期最早允许到 3 天前
   EVENT_FUTURE_DAYS: 365,      // 最晚允许到 1 年后
-  // 自动发布：置信度达到阈值，并且（来自官方信源 或 至少 2 个不同信源都提到）才直接进行程表
-  // 其余进「待审核行程」表，在飞书里把审核状态改成「通过」即可上线
-  AUTO_PUBLISH: process.env.AUTO_PUBLISH !== 'off',
+  // 默认：所有自动找到的行程都进「待审核行程」表，你在飞书里把审核状态改成「通过」即自动上线
+  // 想让高可信度（官方信源或 2 家以上媒体）的行程直接上线：在 GitHub Variables 设置 AUTO_PUBLISH=on
+  AUTO_PUBLISH: process.env.AUTO_PUBLISH === 'on',
   AUTO_PUBLISH_MIN_CONFIDENCE: 0.85,
   AUTO_PUBLISH_MIN_SOURCES: 2,
   NEWS_MIN_IMPORTANCE: 2,      // 1–5 分，低于此分不进新闻表（AIHOT 的「精选」）
