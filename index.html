@@ -421,6 +421,19 @@ footer strong{color:var(--orange);}
 .qz-btn-ghost{background:#fff;border:1.5px solid var(--border);color:var(--ink-light);padding:11px 18px;border-radius:var(--r-sm);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
 .qz-btn-ghost:hover{border-color:var(--orange);color:var(--orange);}
 
+/* ---------- 新闻页 (自动采集) ---------- */
+.nw-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;}
+.nw-chip{background:#fff;border:1.5px solid var(--border);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;color:var(--ink-muted);cursor:pointer;}
+.nw-chip.active{background:var(--orange);border-color:var(--orange);color:#fff;}
+.nw-item{display:block;text-decoration:none;color:inherit;padding:14px 0;border-bottom:1px solid var(--border);}
+.nw-item:last-child{border-bottom:0;}
+.nw-item:hover .nw-title{color:var(--orange);}
+.nw-meta{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--ink-muted);margin-bottom:4px;flex-wrap:wrap;}
+.nw-cat{background:var(--orange-pale);color:var(--orange);border-radius:50px;padding:1px 8px;font-weight:700;}
+.nw-hot{color:#E04458;font-weight:700;}
+.nw-title{font-size:15px;font-weight:700;color:var(--ink);line-height:1.4;margin-bottom:3px;transition:color .2s;}
+.nw-sum{font-size:13px;color:var(--ink-light);line-height:1.55;}
+.nw-empty{text-align:center;padding:32px 0;color:var(--ink-muted);font-size:13px;}
 </style>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="8719967f-1423-40b2-b4d3-d0d64bea63c4"></script>
 </head>
@@ -453,6 +466,7 @@ footer strong{color:var(--orange);}
 <nav class="page-nav">
   <div class="page-nav-inner">
     <button class="page-tab active" data-page="schedule" onclick="switchPage('schedule')">📅 行程</button>
+    <button class="page-tab" data-page="news" onclick="switchPage('news')">📰 新闻</button>
     <button class="page-tab" data-page="comeback" onclick="switchPage('comeback')">🧡 回归中心<span class="new-dot"></span></button>
     <button class="page-tab" data-page="photocard" onclick="switchPage('photocard')">🃏 小卡交换</button>
     <button class="page-tab" data-page="quiz" onclick="switchPage('quiz')">✨ 成员匹配</button>
@@ -643,6 +657,18 @@ footer strong{color:var(--orange);}
       <div id="pc-list"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- ========== Page: 新闻 (自动采集) ========== -->
+<div class="page-section" id="page-news">
+  <div class="cb-container">
+    <div class="cb-section">
+      <h2>📰 RIIZE 最新动态</h2>
+      <p class="cb-muted" style="margin:-6px 0 14px;">每 3 小时自动汇总韩/日/英文媒体与官方渠道，由 AI 整理成中文摘要，点击查看原文</p>
+      <div class="nw-filters" id="nw-filters"></div>
+      <div id="nw-list"><div class="nw-empty">加载中…</div></div>
+    </div>
   </div>
 </div>
 
@@ -987,12 +1013,40 @@ async function loadFromFeishu(){
   try{
     const res=await fetch(FEISHU_CONFIG.proxyUrl);
     const data=await res.json();
-    if(data&&Array.isArray(data.events)){
+    if(!res.ok||data.error){console.error("飞书同步失败:",data.error);return;} // 失败时保留页面内置数据
+    if(data&&Array.isArray(data.events)&&data.events.length){
       SCHEDULE.length=0;
       data.events.forEach(e=>SCHEDULE.push(e));
       updateStats(); updateCountdown(); renderUpcoming(); renderCalendar();
     }
   }catch(e){console.warn("飞书加载失败",e);}
+}
+
+// ══════════════════════════════════════════
+// NEWS (自动采集，数据来自飞书「新闻」表)
+// ══════════════════════════════════════════
+let NEWS=[], nwCat="全部";
+function nwEsc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function nwAgo(ms){if(!ms)return"";const m=Math.floor((Date.now()-ms)/60000);if(m<60)return Math.max(m,1)+" 分钟前";const h=Math.floor(m/60);if(h<24)return h+" 小时前";const d=Math.floor(h/24);if(d<7)return d+" 天前";const t=new Date(ms);return (t.getMonth()+1)+"月"+t.getDate()+"日";}
+async function nwLoad(){
+  const box=document.getElementById("nw-list");
+  try{
+    const res=await fetch("/api/news");const data=await res.json();
+    if(!res.ok||data.error)throw new Error(data.error||res.status);
+    NEWS=data.news||[];nwRender();
+  }catch(e){console.error("新闻加载失败",e);box.innerHTML='<div class="nw-empty">新闻暂时加载失败，稍后再试</div>';}
+}
+function nwRender(){
+  const cats=["全部",...new Set(NEWS.map(n=>n.category))];
+  window.__nwCats=cats;
+  document.getElementById("nw-filters").innerHTML=cats.map((c,i)=>`<button class="nw-chip${c===nwCat?" active":""}" onclick="nwCat=__nwCats[${i}];nwRender()">${nwEsc(c)}</button>`).join("");
+  const list=NEWS.filter(n=>nwCat==="全部"||n.category===nwCat);
+  document.getElementById("nw-list").innerHTML=list.length?list.map(n=>`
+    <a class="nw-item" href="${nwEsc(n.link)}" target="_blank" rel="noopener">
+      <div class="nw-meta"><span class="nw-cat">${nwEsc(n.category)}</span>${n.importance>=4?'<span class="nw-hot">🔥 重要</span>':""}<span>${nwEsc(n.source)}</span><span>${nwAgo(n.published)}</span></div>
+      <div class="nw-title">${nwEsc(n.title)}</div>
+      ${n.summary?`<div class="nw-sum">${nwEsc(n.summary)}</div>`:""}
+    </a>`).join(""):'<div class="nw-empty">暂无新闻，采集器运行后会自动出现</div>';
 }
 
 // ══════════════════════════════════════════
@@ -1025,6 +1079,7 @@ function switchPage(id){
   window.scrollTo({top:0, behavior:"smooth"});
   if(id === "comeback")  dcRender();
   if(id === "photocard") pcRender();
+  if(id === "news" && !window.__nwInit){ nwLoad(); window.__nwInit = true; }
   if(id === "quiz" && !window.__qzInit){ qzStart(); window.__qzInit = true; }
 }
 
