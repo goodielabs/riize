@@ -1,0 +1,62 @@
+# RIIZE 行程 & 新闻自动采集：每 3 小时运行一次，结果写入飞书
+# 默认使用 GitHub Models 免费 AI 额度，不需要任何付费账号
+name: RIIZE Collector
+
+on:
+  schedule:
+    - cron: '17 */3 * * *'   # 每 3 小时（UTC 时间第 17 分钟，避开整点高峰）
+  workflow_dispatch:          # 支持在 Actions 页面手动运行
+    inputs:
+      dry_run:
+        description: '试运行：只打印结果，不写入飞书'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  models: read                # 允许调用 GitHub Models（免费 AI）
+
+concurrency:
+  group: riize-collector
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 记住已经处理过的文章，避免重复调用 AI
+      - name: Restore seen-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/collector/.state
+          key: collector-seen-${{ github.run_id }}
+          restore-keys: collector-seen-
+
+      - name: Run collector
+        run: node scripts/collector/index.js
+        env:
+          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # GitHub 自动提供，不用自己设置
+          # 以下都是可选项，不设置就用免费的 GitHub Models
+          LLM_PROVIDER: ${{ vars.LLM_PROVIDER || 'github' }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AUTO_PUBLISH: ${{ vars.AUTO_PUBLISH || 'on' }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}
+
+      - name: Save seen-cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/collector/.state
+          key: collector-seen-${{ github.run_id }}
